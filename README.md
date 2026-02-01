@@ -113,27 +113,33 @@ node -e "require('http').request({hostname:'localhost',port:3850,path:'/api/week
 
 ---
 
-## 🤖 Интеграция с агентом (чтобы не забывать)
+## 🤖 Интеграция с агентом
 
-Проблема: агент может забыть добавлять сессии в трекер при `sessions_spawn`.
-
-Решение: добавить жёсткое правило в SOUL.md (или AGENTS.md):
+Чтобы агент не забывал обновлять трекер, добавьте правило в системный промпт (SOUL.md, AGENTS.md или аналог):
 
 ```markdown
 ## 📊 Session Tracker (ОБЯЗАТЕЛЬНО)
 
 **При КАЖДОМ `sessions_spawn` → СРАЗУ POST в Session Tracker!**
+**После КАЖДОГО tool call → обновить weekly limit!**
 
-\`\`\`javascript
+# Добавить сессию
 node -e "require('http').request({hostname:'localhost',port:3850,path:'/api/sessions',method:'POST',headers:{'Content-Type':'application/json'}},r=>{}).end(JSON.stringify({label:'...',task:'...',model:'haiku|sonnet|opus',status:'active'}))"
-\`\`\`
+
+# Обновить weekly (после session_status)
+node -e "require('http').request({hostname:'localhost',port:3850,path:'/api/weekly',method:'PUT',headers:{'Content-Type':'application/json'}},r=>{}).end(JSON.stringify({weeklyLimit:XX}))"
 
 **Порядок:**
-1. `sessions_spawn` → получил childSessionKey
-2. СРАЗУ POST в трекер (status: active)
-3. Когда sub-agent завершится → PUT status: completed + totalTokens
+1. `sessions_spawn` → СРАЗУ POST в трекер (status: active)
+2. Когда sub-agent завершится → PUT status: completed + totalTokens
+3. После любой работы → проверить usage → обновить weekly в трекере
 
-**Не забывай. Это твоя память о работе.**
+**Это бесплатно (localhost HTTP). Не экономь на этом.**
 ```
 
-Это правило читается агентом каждую сессию и служит напоминанием.
+### Почему это важно
+
+- HTTP запросы к localhost = 0 токенов
+- Без правила агент забывает обновлять
+- Weekly limit показывает актуальное состояние API лимитов
+- Сессии показывают куда уходят токены
