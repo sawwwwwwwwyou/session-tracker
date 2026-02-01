@@ -5,8 +5,13 @@ const crypto = require('crypto');
 
 const app = express();
 const PORT = 3850;
-const SESSIONS_FILE = path.join(__dirname, 'sessions.json');
-const STATE_FILE = path.join(__dirname, 'state.json');
+
+// Data stored in ~/.clawdbot/session-tracker/ (not in project dir)
+const DATA_DIR = path.join(process.env.USERPROFILE || process.env.HOME, '.clawdbot', 'session-tracker');
+if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+
+const SESSIONS_FILE = path.join(DATA_DIR, 'sessions.json');
+const STATE_FILE = path.join(DATA_DIR, 'state.json');
 
 function loadState() {
   try {

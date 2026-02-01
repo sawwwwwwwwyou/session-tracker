@@ -96,8 +96,20 @@ node -e "require('http').request({hostname:'localhost',port:3850,path:'/api/week
 |------|----------|
 | `server.js` | Express сервер (порт 3850) |
 | `index.html` | UI дашборд |
-| `sessions.json` | Хранилище сессий |
-| `state.json` | Weekly limit и настройки |
+| `sessions.example.json` | Пример структуры сессий |
+| `state.example.json` | Пример state файла |
+
+### Хранение данных
+
+Данные хранятся **вне проекта** (чтобы не попадали в git):
+
+```
+~/.clawdbot/session-tracker/
+├── sessions.json    ← реальные сессии
+└── state.json       ← weekly limit и настройки
+```
+
+Папка создаётся автоматически при первом запуске сервера.
 
 ---
 
