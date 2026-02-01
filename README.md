@@ -98,3 +98,30 @@ node -e "require('http').request({hostname:'localhost',port:3850,path:'/api/week
 | `index.html` | UI дашборд |
 | `sessions.json` | Хранилище сессий |
 | `state.json` | Weekly limit и настройки |
+
+---
+
+## 🤖 Интеграция с агентом (чтобы не забывать)
+
+Проблема: агент может забыть добавлять сессии в трекер при `sessions_spawn`.
+
+Решение: добавить жёсткое правило в SOUL.md (или AGENTS.md):
+
+```markdown
+## 📊 Session Tracker (ОБЯЗАТЕЛЬНО)
+
+**При КАЖДОМ `sessions_spawn` → СРАЗУ POST в Session Tracker!**
+
+\`\`\`javascript
+node -e "require('http').request({hostname:'localhost',port:3850,path:'/api/sessions',method:'POST',headers:{'Content-Type':'application/json'}},r=>{}).end(JSON.stringify({label:'...',task:'...',model:'haiku|sonnet|opus',status:'active'}))"
+\`\`\`
+
+**Порядок:**
+1. `sessions_spawn` → получил childSessionKey
+2. СРАЗУ POST в трекер (status: active)
+3. Когда sub-agent завершится → PUT status: completed + totalTokens
+
+**Не забывай. Это твоя память о работе.**
+```
+
+Это правило читается агентом каждую сессию и служит напоминанием.
