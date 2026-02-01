@@ -44,10 +44,16 @@ function saveSessions(data) {
   fs.writeFileSync(SESSIONS_FILE, JSON.stringify(data, null, 2));
 }
 
-// GET all sessions (newest first)
+// GET all sessions (active first, then by date)
 app.get('/api/sessions', (req, res) => {
   const data = loadSessions();
-  const sorted = data.sessions.sort((a, b) => new Date(b.startedAt) - new Date(a.startedAt));
+  const sorted = data.sessions.sort((a, b) => {
+    // Active sessions first
+    if (a.status === 'active' && b.status !== 'active') return -1;
+    if (a.status !== 'active' && b.status === 'active') return 1;
+    // Then by date (newest first)
+    return new Date(b.startedAt) - new Date(a.startedAt);
+  });
   res.json(sorted);
 });
 
