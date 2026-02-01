@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 · Session Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0a0a0c;
+            --bg-main: #0d0d0f;
+            --bg-card: #141418;
+            --bg-hover: #1a1a1f;
+            --accent: #f59e0b;
+            --accent-dim: rgba(245, 158, 11, 0.15);
+            --text: #e4e4e7;
+            --text-dim: #71717a;
+            --border: #27272a;
+            --green: #22c55e;
+            --red: #ef4444;
+            --purple: #a78bfa;
+            --cyan: #22d3ee;
+            --blue: #3b82f6;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg-main);
+            color: var(--text);
+            min-height: 100vh;
+        }
+        
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background: var(--bg-dark);
+            border-bottom: 1px solid var(--border);
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        .logo-icon {
+            font-size: 1.5rem;
+        }
+        .logo-text {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--accent);
+        }
+        .logo-dot {
+            color: var(--text-dim);
+            margin: 0 0.25rem;
+        }
+        .logo-sub {
+            color: var(--text);
+            font-weight: 400;
+        }
+        
+        /* Controls */
+        .controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .control-label {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        select, input[type="text"] {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+        }
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        .btn {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--accent);
+            color: var(--bg-dark);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .btn:hover {
+            filter: brightness(1.1);
+        }
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-dim);
+            border: 1px solid var(--border);
+        }
+        .btn-ghost:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        
+        /* Stats Bar */
+        .stats {
+            display: flex;
+            gap: 2rem;
+            padding: 1rem 2rem;
+            background: var(--bg-dark);
+            border-bottom: 1px solid var(--border);
+        }
+        .stat {
+            display: flex;
+            flex-direction: column;
+        }
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+        .stat-value.green { color: var(--green); }
+        .stat-value.purple { color: var(--purple); }
+        .stat-value.red { color: var(--red); }
+        .stat-value.yellow { color: var(--accent); }
+        
+        .weekly-stat {
+            padding-right: 2rem;
+            border-right: 1px solid var(--border);
+            margin-right: 1rem;
+        }
+        .weekly-stat .stat-value {
+            font-size: 2rem;
+        }
+        .stat-label {
+            font-size: 0.65rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+        
+        /* Terminal */
+        .terminal {
+            margin: 1.5rem 2rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .terminal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            background: var(--bg-dark);
+            border-bottom: 1px solid var(--border);
+        }
+        .terminal-title {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+        .terminal-dots {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        .dot.red { background: var(--red); }
+        .dot.yellow { background: var(--accent); }
+        .dot.green { background: var(--green); }
+        
+        .terminal-body {
+            max-height: calc(100vh - 280px);
+            overflow-y: auto;
+        }
+        
+        /* Session Row */
+        .session-row {
+            display: grid;
+            grid-template-columns: 100px 80px 1fr 100px 80px;
+            gap: 1rem;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.8rem;
+            align-items: center;
+            transition: background 0.1s;
+        }
+        .session-row:hover {
+            background: var(--bg-hover);
+        }
+        .session-row:last-child {
+            border-bottom: none;
+        }
+        
+        .time {
+            color: var(--text-dim);
+            font-size: 0.75rem;
+        }
+        
+        .model-badge {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .model-badge.opus { background: rgba(167, 139, 250, 0.2); color: var(--purple); }
+        .model-badge.sonnet { background: var(--accent-dim); color: var(--accent); }
+        .model-badge.haiku { background: rgba(34, 211, 238, 0.2); color: var(--cyan); }
+        
+        .session-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.125rem;
+            overflow: hidden;
+        }
+        .session-label {
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .session-task {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .tokens {
+            text-align: right;
+            font-weight: 600;
+        }
+        .tokens.high { color: var(--red); }
+        .tokens.med { color: var(--accent); }
+        .tokens.low { color: var(--green); }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.6rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            text-align: center;
+        }
+        .status-badge.active { background: var(--accent-dim); color: var(--accent); }
+        .status-badge.completed { background: rgba(34, 197, 94, 0.2); color: var(--green); }
+        
+        /* Empty */
+        .empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem;
+            color: var(--text-dim);
+        }
+        .empty-icon { font-size: 3rem; opacity: 0.3; margin-bottom: 1rem; }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-dark); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <span class="logo-icon">🔧</span>
+            <span class="logo-text">Session Tracker</span>
+        </div>
+        <div class="controls">
+            <div class="control-group">
+                <span class="control-label">Model:</span>
+                <select id="filterModel">
+                    <option value="">All</option>
+                    <option value="opus">Opus</option>
+                    <option value="sonnet">Sonnet</option>
+                    <option value="haiku">Haiku</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <span class="control-label">Status:</span>
+                <select id="filterStatus">
+                    <option value="">All</option>
+                    <option value="active">Active</option>
+                    <option value="completed">Completed</option>
+                </select>
+            </div>
+            <input type="text" id="search" placeholder="Filter..." style="width:140px;">
+            <button class="btn-ghost" onclick="refresh()">Refresh</button>
+        </div>
+    </header>
+    
+    <div class="stats">
+        <div class="stat weekly-stat">
+            <span class="stat-value" id="statWeekly">100%</span>
+            <span class="stat-label">Weekly Limit</span>
+        </div>
+        <div class="stat">
+            <span class="stat-value" id="statTotal">0</span>
+            <span class="stat-label">Total Sessions</span>
+        </div>
+        <div class="stat">
+            <span class="stat-value green" id="statActive">0</span>
+            <span class="stat-label">Active</span>
+        </div>
+        <div class="stat">
+            <span class="stat-value purple" id="statTokens">0</span>
+            <span class="stat-label">Total Tokens</span>
+        </div>
+        <div class="stat">
+            <span class="stat-value" id="statToday">0</span>
+            <span class="stat-label">Today</span>
+        </div>
+        <div class="stat">
+            <span class="stat-value green" id="statTodayTokens">0</span>
+            <span class="stat-label">Today Tokens</span>
+        </div>
+    </div>
+    
+    <div class="terminal">
+        <div class="terminal-header">
+            <span class="terminal-title">Session Log</span>
+            <div class="terminal-dots">
+                <span class="dot red"></span>
+                <span class="dot yellow"></span>
+                <span class="dot green"></span>
+            </div>
+        </div>
+        <div class="terminal-body" id="sessions"></div>
+    </div>
+
+    <script>
+        let sessions = [];
+        
+        async function refresh() {
+            try {
+                const [sessionsRes, statsRes] = await Promise.all([
+                    fetch('/api/sessions'),
+                    fetch('/api/stats')
+                ]);
+                sessions = await sessionsRes.json();
+                const stats = await statsRes.json();
+                
+                document.getElementById('statTotal').textContent = stats.total;
+                document.getElementById('statActive').textContent = stats.active;
+                document.getElementById('statTokens').textContent = formatTokens(stats.totalTokens);
+                document.getElementById('statToday').textContent = stats.todayCount;
+                document.getElementById('statTodayTokens').textContent = formatTokens(stats.todayTokens);
+                
+                // Weekly limit with color
+                const weekly = stats.weeklyLimit || 100;
+                const weeklyEl = document.getElementById('statWeekly');
+                weeklyEl.textContent = weekly + '%';
+                weeklyEl.className = 'stat-value';
+                if (weekly <= 15) {
+                    weeklyEl.classList.add('red');
+                } else if (weekly <= 40) {
+                    weeklyEl.classList.add('yellow');
+                } else {
+                    weeklyEl.classList.add('green');
+                }
+                
+                render();
+            } catch (e) {
+                console.error(e);
+            }
+        }
+        
+        function formatTokens(n) {
+            if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+            if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
+            return n.toString();
+        }
+        
+        function getModelClass(m) {
+            m = (m || '').toLowerCase();
+            if (m.includes('opus')) return 'opus';
+            if (m.includes('sonnet')) return 'sonnet';
+            if (m.includes('haiku')) return 'haiku';
+            return '';
+        }
+        
+        function getModelLabel(m) {
+            m = (m || '').toLowerCase();
+            if (m.includes('opus')) return 'OPUS';
+            if (m.includes('sonnet')) return 'SONNET';
+            if (m.includes('haiku')) return 'HAIKU';
+            return m.slice(0, 6).toUpperCase();
+        }
+        
+        function getTokenClass(n) {
+            if (n >= 80000) return 'high';
+            if (n >= 20000) return 'med';
+            return 'low';
+        }
+        
+        function formatTime(iso) {
+            const d = new Date(iso);
+            const now = new Date();
+            const isToday = d.toDateString() === now.toDateString();
+            if (isToday) {
+                return d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            }
+            return d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' }) + ' ' +
+                   d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+        }
+        
+        function esc(t) {
+            const d = document.createElement('div');
+            d.textContent = t;
+            return d.innerHTML;
+        }
+        
+        function render() {
+            const model = document.getElementById('filterModel').value;
+            const status = document.getElementById('filterStatus').value;
+            const q = document.getElementById('search').value.toLowerCase();
+            
+            const filtered = sessions.filter(s => {
+                if (model && !getModelClass(s.model).includes(model)) return false;
+                if (status && s.status !== status) return false;
+                if (q && !(s.label + s.task).toLowerCase().includes(q)) return false;
+                return true;
+            });
+            
+            const el = document.getElementById('sessions');
+            if (!filtered.length) {
+                el.innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div>No sessions</div></div>';
+                return;
+            }
+            
+            el.innerHTML = filtered.map(s => `
+                <div class="session-row">
+                    <div class="time">${formatTime(s.startedAt)}</div>
+                    <div><span class="model-badge ${getModelClass(s.model)}">${getModelLabel(s.model)}</span></div>
+                    <div class="session-info">
+                        <div class="session-label">${esc(s.label)}</div>
+                        ${s.task ? `<div class="session-task">${esc(s.task)}</div>` : ''}
+                    </div>
+                    <div class="tokens ${getTokenClass(s.totalTokens)}">${formatTokens(s.totalTokens)} tok</div>
+                    <div><span class="status-badge ${s.status}">${s.status === 'completed' ? '✓' : '●'} ${s.status}</span></div>
+                </div>
+            `).join('');
+        }
+        
+        document.getElementById('filterModel').onchange = render;
+        document.getElementById('filterStatus').onchange = render;
+        document.getElementById('search').oninput = render;
+        
+        setInterval(refresh, 30000);
+        refresh();
+    </script>
+</body>
+</html>
