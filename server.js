@@ -12,7 +12,7 @@ function loadState() {
   try {
     return JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
   } catch (e) {
-    return { weeklyLimit: 100 };
+    return { weeklyLimit: 100, daysLeft: 7 };
   }
 }
 
@@ -109,19 +109,24 @@ app.get('/api/stats', (req, res) => {
     totalTokens: data.sessions.reduce((sum, s) => sum + (s.totalTokens || 0), 0),
     todayCount: todaySessions.length,
     todayTokens: todaySessions.reduce((sum, s) => sum + (s.totalTokens || 0), 0),
-    weeklyLimit: state.weeklyLimit
+    weeklyLimit: state.weeklyLimit,
+    daysLeft: state.daysLeft || 7
   });
 });
 
 // GET/PUT weekly limit
 app.get('/api/weekly', (req, res) => {
   const state = loadState();
-  res.json({ weeklyLimit: state.weeklyLimit });
+  res.json({ 
+    weeklyLimit: state.weeklyLimit, 
+    daysLeft: state.daysLeft || 7 
+  });
 });
 
 app.put('/api/weekly', (req, res) => {
   const state = loadState();
   state.weeklyLimit = req.body.weeklyLimit ?? state.weeklyLimit;
+  state.daysLeft = req.body.daysLeft ?? state.daysLeft ?? 7;
   state.updatedAt = new Date().toISOString();
   saveState(state);
   res.json(state);

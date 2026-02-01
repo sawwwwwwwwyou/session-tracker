@@ -147,6 +147,66 @@
         .weekly-stat .stat-value {
             font-size: 2rem;
         }
+        .weekly-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            position: relative;
+        }
+        .info-icon {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--border);
+            color: var(--text-dim);
+            font-size: 0.7rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: help;
+            transition: all 0.15s;
+        }
+        .info-icon:hover {
+            background: var(--accent);
+            color: var(--bg-dark);
+        }
+        .tooltip {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            margin-top: 0.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.75rem 1rem;
+            font-size: 0.75rem;
+            color: var(--text);
+            width: 280px;
+            z-index: 100;
+            line-height: 1.5;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .info-icon:hover + .tooltip,
+        .tooltip:hover {
+            display: block;
+        }
+        .tooltip-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.25rem;
+        }
+        .tooltip-label { color: var(--text-dim); }
+        .tooltip-value { font-weight: 600; }
+        .tooltip-divider {
+            border-top: 1px solid var(--border);
+            margin: 0.5rem 0;
+        }
+        .tooltip-note {
+            color: var(--text-dim);
+            font-size: 0.65rem;
+        }
         .stat-label {
             font-size: 0.65rem;
             color: var(--text-dim);
@@ -317,7 +377,11 @@
     
     <div class="stats">
         <div class="stat weekly-stat">
-            <span class="stat-value" id="statWeekly">100%</span>
+            <div class="weekly-header">
+                <span class="stat-value" id="statWeekly">100%</span>
+                <span class="info-icon" id="weeklyInfo">?</span>
+                <div class="tooltip" id="weeklyTooltip"></div>
+            </div>
             <span class="stat-label">Weekly Limit</span>
         </div>
         <div class="stat">
@@ -372,18 +436,52 @@
                 document.getElementById('statToday').textContent = stats.todayCount;
                 document.getElementById('statTodayTokens').textContent = formatTokens(stats.todayTokens);
                 
-                // Weekly limit with color
+                // Weekly limit with color based on per-day rate
                 const weekly = stats.weeklyLimit || 100;
+                const daysLeft = stats.daysLeft || 7;
+                const perDay = daysLeft > 0 ? weekly / daysLeft : 0;
+                const avgPerDay = 100 / 7; // ~14.3%
+                
                 const weeklyEl = document.getElementById('statWeekly');
-                weeklyEl.textContent = weekly + '%';
+                weeklyEl.textContent = weekly + '% · ' + daysLeft + 'd';
                 weeklyEl.className = 'stat-value';
-                if (weekly <= 15) {
+                
+                // Color based on per-day availability
+                if (perDay < 10) {
                     weeklyEl.classList.add('red');
-                } else if (weekly <= 40) {
+                } else if (perDay < avgPerDay) {
                     weeklyEl.classList.add('yellow');
                 } else {
                     weeklyEl.classList.add('green');
                 }
+                
+                // Update tooltip
+                const tooltipEl = document.getElementById('weeklyTooltip');
+                tooltipEl.innerHTML = `
+                    <div class="tooltip-row">
+                        <span class="tooltip-label">Weekly left:</span>
+                        <span class="tooltip-value">${weekly}%</span>
+                    </div>
+                    <div class="tooltip-row">
+                        <span class="tooltip-label">Days until reset:</span>
+                        <span class="tooltip-value">${daysLeft}d</span>
+                    </div>
+                    <div class="tooltip-divider"></div>
+                    <div class="tooltip-row">
+                        <span class="tooltip-label">Per day available:</span>
+                        <span class="tooltip-value">${perDay.toFixed(1)}%</span>
+                    </div>
+                    <div class="tooltip-row">
+                        <span class="tooltip-label">Normal rate:</span>
+                        <span class="tooltip-value">${avgPerDay.toFixed(1)}%</span>
+                    </div>
+                    <div class="tooltip-divider"></div>
+                    <div class="tooltip-note">
+                        🟢 ≥14.3%/day = OK<br>
+                        🟡 10-14.3%/day = save tokens<br>
+                        🔴 &lt;10%/day = STOP spawning!
+                    </div>
+                `;
                 
                 render();
             } catch (e) {
